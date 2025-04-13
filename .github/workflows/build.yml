@@ -76,7 +76,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v1
       
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
@@ -104,7 +104,7 @@ jobs:
           prerelease: false
       
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v4
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
