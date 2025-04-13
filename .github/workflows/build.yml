@@ -25,7 +25,7 @@ jobs:
         run: cmake --build cpp/build
       
       - name: Upload C++ Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cpp-binaries
           path: cpp/build/bin/
@@ -44,7 +44,7 @@ jobs:
         run: dotnet build csharp/DesignPatterns.csproj -c Release
       
       - name: Upload C# Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: csharp-binaries
           path: csharp/bin/Release/
@@ -64,7 +64,7 @@ jobs:
         run: cd kotlin && ./gradlew build jar
       
       - name: Upload Kotlin Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kotlin-binaries
           path: kotlin/build/libs/
@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@v3
       
       - name: Download All Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
       
