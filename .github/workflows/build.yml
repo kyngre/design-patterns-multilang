@@ -1,0 +1,112 @@
+# .github/workflows/build.yml
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-cpp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install CMake
+        run: sudo apt-get update && sudo apt-get install -y cmake
+      
+      - name: Configure CMake
+        run: cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
+      
+      - name: Build C++ Projects
+        run: cmake --build cpp/build
+      
+      - name: Upload C++ Binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpp-binaries
+          path: cpp/build/bin/
+
+  build-csharp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+      
+      - name: Build C# Project
+        run: dotnet build csharp/DesignPatterns.csproj -c Release
+      
+      - name: Upload C# Binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: csharp-binaries
+          path: csharp/bin/Release/
+
+  build-kotlin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+      
+      - name: Build Kotlin Project
+        run: cd kotlin && ./gradlew build jar
+      
+      - name: Upload Kotlin Binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: kotlin-binaries
+          path: kotlin/build/libs/
+
+  create-release:
+    needs: [build-cpp, build-csharp, build-kotlin]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      
+      - name: Create Release Archive
+        run: |
+          mkdir -p release
+          cp -r artifacts/cpp-binaries/* release/
+          cp -r artifacts/csharp-binaries/* release/
+          cp -r artifacts/kotlin-binaries/* release/
+          cd release
+          zip -r ../design-patterns-multilang.zip .
+      
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: release-${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
+      
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./design-patterns-multilang.zip
+          asset_name: design-patterns-multilang.zip
+          asset_content_type: application/zip
